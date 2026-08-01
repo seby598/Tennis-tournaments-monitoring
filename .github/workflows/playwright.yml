@@ -4,22 +4,35 @@ on:
     branches: [ main, master ]
   pull_request:
     branches: [ main, master ]
+  schedule:
+    # Runs every day at 08:00 UTC (Adjust as needed)
+    - cron: '0 8 * * *'
+
 jobs:
   test:
     timeout-minutes: 60
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v4
+    
     - uses: actions/setup-node@v4
       with:
         node-version: lts/*
+
     - name: Install dependencies
       run: npm ci
+
     - name: Install Playwright Browsers
       run: npx playwright install --with-deps
+
     - name: Run Playwright tests
       run: npx playwright test
-    - uses: actions/upload-artifact@v4
+
+    # This saves the HTML report and the new visual diffs if the test fails
+    - uses: actions/checkout@v4
+      if: ${{ !cancelled() }}
+    - name: Upload Report & Mismatched Snapshots
+      uses: actions/upload-artifact@v4
       if: ${{ !cancelled() }}
       with:
         name: playwright-report
