@@ -6,7 +6,7 @@ on:
     branches: [ main, master ]
   schedule:
     # Runs every day at 08:00 UTC (Adjust as needed)
-    - cron: '0 8 * * *'
+    - cron: '22 3 * * *'
 
 jobs:
   test:
