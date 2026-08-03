@@ -55,7 +55,12 @@ test('check for new tennis tournaments', async ({ page }, testInfo) => {
   // 4. Filter for ONLY new additions (ignores items that were removed)
   const newTournaments = currentTournaments.filter((t) => !previousIds.has(t.id));
 
-  // 5. Assert no new items were detected
+  // 5. Update baseline and assert
+  if (newTournaments.length > 0) {
+    // Merge current items into baseline to prevent repeated alerts on next runs
+    fs.writeFileSync(snapshotPath, JSON.stringify(currentTournaments, null, 2));
+  }
+
   expect(
     newTournaments,
     `Found ${newTournaments.length} new tournament(s)!\n${JSON.stringify(newTournaments, null, 2)}`
