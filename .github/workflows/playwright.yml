@@ -27,6 +27,16 @@ jobs:
 
     - name: Run Playwright tests
       run: npx playwright test
+        
+    - name: Commit updated tournament baseline
+      if: failure() # Only run this if the test failed (meaning a new tournament was found)
+      run: |
+        git config --global user.name 'github-actions[bot]'
+        git config --global user.email 'github-actions[bot]@users.noreply.github.com'
+        git add *known-tournaments.json
+        # Only commit if there are actually changes to prevent errors
+        git diff --quiet && git diff --staged --quiet || git commit -m "chore: update known tournaments baseline"
+        git push
 
     # This saves the HTML report and the new visual diffs if the test fails
     - uses: actions/checkout@v4
