@@ -14,25 +14,11 @@ test('check for new tennis tournaments', async ({ page }, testInfo) => {
   const tournamentRows = page.locator('.tournamentItem');
   await tournamentRows.first().waitFor({ state: 'visible' });
 
-  // 1. Extract data with a unique ID per tournament
+  // 1. Extract ONLY the tournament names into an array of strings
   const currentTournaments = await tournamentRows.evaluateAll((rows) => {
-    return rows.map((row) => {
-      const name = row.querySelector('.tournament-name-label')?.textContent?.trim() || '';
-      const startDate = row.querySelector('.startdate .datefield')?.textContent?.trim() || '';
-      const endDate = row.querySelector('.enddate .datefield')?.textContent?.trim() || '';
-      const locationNodes = row.querySelectorAll('.tournament-location div');
-      const address = Array.from(locationNodes)
-        .map((node) => node.textContent?.trim())
-        .filter(Boolean)
-        .join(', ');
-
-      return {
-        id: `${name}_${startDate}`, // Composite key
-        name,
-        date: `${startDate} - ${endDate}`,
-        address,
-      };
-    });
+    return rows
+      .map((row) => row.querySelector('.tournament-name-label')?.textContent?.trim() || '')
+      .filter((name) => name !== ''); // Filter out any empty strings just in case
   });
 
   // Resolve snapshot file path managed by Playwright
@@ -46,14 +32,14 @@ test('check for new tennis tournaments', async ({ page }, testInfo) => {
     return;
   }
 
-  // 3. Load previous baseline tournaments
-  const previousTournaments: Array<{ id: string }> = JSON.parse(
+  // 3. Load previous baseline tournament names (now just an array of strings)
+  const previousTournaments: string[] = JSON.parse(
     fs.readFileSync(snapshotPath, 'utf-8')
   );
-  const previousIds = new Set(previousTournaments.map((t) => t.id));
+  const previousNames = new Set(previousTournaments);
 
-  // 4. Filter for ONLY new additions (ignores items that were removed)
-  const newTournaments = currentTournaments.filter((t) => !previousIds.has(t.id));
+  // 4. Filter for ONLY new additions by checking the name
+  const newTournaments = currentTournaments.filter((name) => !previousNames.has(name));
 
   // 5. Update baseline and assert
   if (newTournaments.length > 0) {
